@@ -13,9 +13,9 @@ import (
 
 	"github.com/go-ldap/ldap/v3"
 	"github.com/jedib0t/go-pretty/table"
-	"github.com/mfdooom/gokrb5/crypto"
 	"github.com/mfdooom/gokrb5/v8/client"
 	"github.com/mfdooom/gokrb5/v8/config"
+	"github.com/mfdooom/gokrb5/v8/crypto"
 	"github.com/mfdooom/gokrb5/v8/iana/etypeID"
 )
 
