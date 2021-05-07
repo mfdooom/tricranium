@@ -4,8 +4,8 @@ Tricranium is my attempt at betteer understanding kerberos and golang. Right now
 
 ### Installation
 
-```git clone https://github.com/mfdooom/tricranium && cd tricranium```
-```get github.com/go-ldap/ldap/v3```
-```go get github.com/jedib0t/go-pretty/table```
-```go get github.com/mfdooom/gokrb5/v8/```
-```go build tricranium.go```
+- ```git clone https://github.com/mfdooom/tricranium && cd tricranium```
+- ```get github.com/go-ldap/ldap/v3```
+- ```go get github.com/jedib0t/go-pretty/table```
+- ```go get github.com/mfdooom/gokrb5/v8/```
+- ```go build tricranium.go```
