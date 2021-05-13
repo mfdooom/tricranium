@@ -59,11 +59,11 @@ type FlagOptions struct {
 }
 
 func options() *FlagOptions {
-	dcIp := flag.String("dc-ip", "", "Need to define dc ip addreess")
-	request := flag.Bool("request", false, "Requests TGS for users")
-	requestUser := flag.String("request-user", "", "Requests TGS for the SPN associated to the user specified")
+	dcIp := flag.String("dc-ip", "", "Domain controller IP address")
+	request := flag.Bool("request", false, "Request tickets for all users with SPN set")
+	requestUser := flag.String("request-user", "", "Request ticket for the specified user")
 	hash := flag.String("hash", "", "NTLM Hash in the format LMHASH:NTHASH")
-	rc4 := flag.Bool("rc4", false, "Only request accounts with RC4 specefied")
+	rc4 := flag.Bool("rc4", false, "Only request tickets for accounts with RC4 specefied")
 	delay := flag.Int("delay", 0, "number of seconds delayed between TGS requests")
 
 	flag.Usage = func() {
@@ -96,7 +96,7 @@ func printTable(ldapResults []LDAPResult) {
 
 		// Windows to Unix time stuff
 		// http://sunshine2k.blogspot.com/2014/08/where-does-116444736000000000-come-from.html
-		pwdLastSetUnix := ((pwdLastSet - 116444736000000000) * 100) / 1000000000
+		pwdLastSetUnix := (pwdLastSet - 116444736000000000) / 10000000
 		pwdLastSetTime := time.Unix(pwdLastSetUnix, 0)
 		pwdLastSetString := pwdLastSetTime.String()
 
@@ -105,7 +105,7 @@ func printTable(ldapResults []LDAPResult) {
 			lastLogonString = "<never>"
 		} else {
 
-			lastLogonUnix := ((lastLogon - 116444736000000000) * 100) / 1000000000
+			lastLogonUnix := (lastLogon - 116444736000000000) / 10000000
 			lastLogonTime := time.Unix(lastLogonUnix, 0)
 			lastLogonString = lastLogonTime.String()
 		}
@@ -260,8 +260,7 @@ func main() {
 
 	if opt.request {
 
-		c, err := config.NewFromString(fmt.Sprintf(
-			libdeafult, domain, domain, opt.dcIp, domain))
+		c, err := config.NewFromString(fmt.Sprintf(libdeafult, domain, domain, opt.dcIp, domain))
 		if err != nil {
 			l.Fatalf("Error Loading Config: %v\n", err)
 		}
