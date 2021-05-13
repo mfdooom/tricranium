@@ -67,7 +67,10 @@ func options() *FlagOptions {
 	delay := flag.Int("delay", 0, "number of seconds delayed between TGS requests")
 
 	flag.Usage = func() {
-		fmt.Fprintf(flag.CommandLine.Output(), "Usage: tricranium [-dc-ip ip address] [-request] [-rc4] [request-user domain/username] [-hash NT:LM] [-delay seconds] domain/username[:password]\n")
+		fmt.Fprintf(flag.CommandLine.Output(), "\nUsage: tricranium [-dc-ip ip address] [-request] [-rc4] [-request-user domain/username] [-hash NT:LM] [-delay seconds] target\n\n")
+		fmt.Printf("arguments:\n\n")
+		fmt.Printf("  target domain/username[:password]\n\n")
+		fmt.Printf("optional arguments:\n\n")
 		flag.PrintDefaults()
 	}
 
