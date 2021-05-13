@@ -15,17 +15,24 @@ Tricranium is my attempt at better understanding kerberos and golang. Right now 
 ### Usage
 
 ~~~
-Usage: tricranium [-dc-ip ip address] [-request] [-rc4] [request-user domain/username] [-hash NT:LM] [-delay seconds] domain/username[:password]
+Usage: tricranium [-dc-ip ip address] [-request] [-rc4] [-request-user domain/username] [-hash NT:LM] [-delay seconds] target
+
+arguments:
+
+  target domain/username[:password]
+
+optional arguments:
+
   -dc-ip string
-        Need to define dc ip addreess
+         domain controller ip addreess
   -delay int
         number of seconds delayed between TGS requests
   -hash string
         NTLM Hash in the format LMHASH:NTHASH
   -rc4
-        Only request accounts with RC4 specefied
+        Only request TGS for accounts with RC4 specefied
   -request
         Requests TGS for users
   -request-user string
-        Requests TGS for the SPN associated to the user specified
+        Requests TGS of the specified user
 ~~~
