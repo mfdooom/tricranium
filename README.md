@@ -11,3 +11,21 @@ Tricranium is my attempt at better understanding kerberos and golang. Right now 
 - ```go get github.com/jedib0t/go-pretty/table```
 - ```go get github.com/mfdooom/gokrb5/v8/```
 - ```go build tricranium.go```
+
+### Usage
+
+~~~
+Usage: tricranium [-dc-ip ip address] [-request] [-rc4] [request-user domain/username] [-hash NT:LM] [-delay seconds] domain/username[:password]
+  -dc-ip string
+        Need to define dc ip addreess
+  -delay int
+        number of seconds delayed between TGS requests
+  -hash string
+        NTLM Hash in the format LMHASH:NTHASH
+  -rc4
+        Only request accounts with RC4 specefied
+  -request
+        Requests TGS for users
+  -request-user string
+        Requests TGS for the SPN associated to the user specified
+~~~
